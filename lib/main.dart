@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
 import 'data/database_helper.dart';
+import 'data/exercise_library.dart';
 import 'screens/app_shell.dart';
 
 // The app opens the database first and then shows the root widget.
@@ -12,6 +13,10 @@ Future<void> main() async {
   // This prints the table names in the Debug Console to prove they exist.
   final tables = await DatabaseHelper.instance.tableNames();
   debugPrint('Database tables: $tables');
+
+  // The bundled exercise list is loaded once so every screen can use it.
+  await ExerciseLibrary.load();
+  debugPrint('Exercises loaded: ${ExerciseLibrary.all.length}');
 
   runApp(const HomeFitApp());
 }

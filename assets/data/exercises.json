@@ -1,0 +1,365 @@
+[
+  {
+    "name": "Push-up",
+    "focusArea": "Upper",
+    "type": "reps",
+    "steps": [
+      "Start in a high plank position with your hands slightly wider than shoulder-width apart and your feet together.",
+      "Engage your core and lower your body towards the ground by bending your elbows, keeping your body in a straight line.",
+      "Pause for a moment when your chest is just above the ground, then push yourself back up to the starting position by straightening your arms.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0662.gif",
+    "sourceId": "0662"
+  },
+  {
+    "name": "Kneeling Push-up",
+    "focusArea": "Upper",
+    "type": "reps",
+    "steps": [
+      "Start by kneeling on the ground with your hands shoulder-width apart, fingers pointing forward.",
+      "Extend your legs behind you, resting on the balls of your feet, so that your body forms a straight line from head to heels.",
+      "Engage your core and lower your body towards the ground by bending your elbows, keeping them close to your sides.",
+      "Continue lowering until your chest is just above the ground, then push back up to the starting position by straightening your arms.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/3211.gif",
+    "sourceId": "3211"
+  },
+  {
+    "name": "Diamond Push-up",
+    "focusArea": "Upper",
+    "type": "reps",
+    "steps": [
+      "Start in a high plank position with your hands close together, forming a diamond shape with your thumbs and index fingers.",
+      "Keep your body in a straight line from head to toe, engaging your core and glutes.",
+      "Lower your chest towards the diamond shape formed by your hands, keeping your elbows close to your body.",
+      "Pause for a moment at the bottom, then push yourself back up to the starting position.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0283.gif",
+    "sourceId": "0283"
+  },
+  {
+    "name": "Wall Push-up",
+    "focusArea": "Upper",
+    "type": "reps",
+    "steps": [
+      "Stand facing a wall, about arm's length away.",
+      "Place your hands on the wall at shoulder height, slightly wider than shoulder-width apart.",
+      "Step back a few feet, keeping your body straight and your feet hip-width apart.",
+      "Bend your elbows and lower your chest towards the wall, keeping your body in a straight line.",
+      "Push back up to the starting position, straightening your arms.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0659.gif",
+    "sourceId": "0659"
+  },
+  {
+    "name": "Chair Dip",
+    "focusArea": "Upper",
+    "type": "reps",
+    "steps": [
+      "Sit on the edge of a bench or chair with your hands gripping the edge next to your hips.",
+      "Slide your butt off the bench and straighten your legs in front of you, keeping your heels on the ground.",
+      "Bend your elbows and lower your body towards the ground, keeping your back close to the bench.",
+      "Pause for a moment at the bottom, then push yourself back up to the starting position.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0129.gif",
+    "sourceId": "0129"
+  },
+  {
+    "name": "Split Squat",
+    "focusArea": "Lower",
+    "type": "reps",
+    "steps": [
+      "Stand with your feet shoulder-width apart.",
+      "Take a step forward with one foot and place it about two feet in front of the other foot.",
+      "Lower your body by bending your knees and hips, keeping your back straight.",
+      "Continue lowering until your front thigh is parallel to the ground, and your back knee is hovering just above the ground.",
+      "Pause for a moment, then push through your front heel to return to the starting position.",
+      "Repeat for the desired number of repetitions, then switch legs and repeat."
+    ],
+    "gif": "assets/gifs/2368.gif",
+    "sourceId": "2368"
+  },
+  {
+    "name": "Jump Squat",
+    "focusArea": "Lower",
+    "type": "reps",
+    "steps": [
+      "Stand with your feet shoulder-width apart.",
+      "Lower your body into a squat position by bending your knees and pushing your hips back.",
+      "Jump explosively off the ground, extending your hips, knees, and ankles.",
+      "While in mid-air, quickly bring your arms forward for balance.",
+      "Land softly on the balls of your feet and immediately go into the next repetition.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0514.gif",
+    "sourceId": "0514"
+  },
+  {
+    "name": "Forward Lunge",
+    "focusArea": "Lower",
+    "type": "reps",
+    "steps": [
+      "Stand with your feet hip-width apart and hands on your hips.",
+      "Take a big step forward with your right foot, lowering your body into a lunge position.",
+      "Bend your right knee to about 90 degrees, keeping your knee aligned with your ankle.",
+      "Push off with your right foot and return to the starting position.",
+      "Repeat with your left leg, alternating sides for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/3470.gif",
+    "sourceId": "3470"
+  },
+  {
+    "name": "Glute Bridge",
+    "focusArea": "Lower",
+    "type": "reps",
+    "steps": [
+      "Lie flat on your back with your knees bent and feet flat on the ground.",
+      "Place your arms by your sides, palms facing down.",
+      "Engage your glutes and core, then lift your hips off the ground until your body forms a straight line from your knees to your shoulders.",
+      "Pause for a moment at the top, squeezing your glutes.",
+      "Slowly lower your hips back down to the starting position.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/3013.gif",
+    "sourceId": "3013"
+  },
+  {
+    "name": "Calf Raise",
+    "focusArea": "Lower",
+    "type": "reps",
+    "steps": [
+      "Stand with your feet shoulder-width apart, toes pointing forward.",
+      "Place your hands on a wall or stable surface for balance.",
+      "Slowly raise your heels off the ground, lifting your body weight onto the balls of your feet.",
+      "Pause for a moment at the top, then slowly lower your heels back down to the starting position.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/1373.gif",
+    "sourceId": "1373"
+  },
+  {
+    "name": "Wall Sit March",
+    "focusArea": "Lower",
+    "type": "timed",
+    "steps": [
+      "Stand with your back against a wall and your feet hip-width apart.",
+      "Slowly slide your back down the wall until your knees are bent at a 90-degree angle.",
+      "Lift your right foot off the ground and bring your knee towards your chest.",
+      "Lower your right foot back down and lift your left foot off the ground, bringing your knee towards your chest.",
+      "Continue alternating between lifting your right and left foot for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0624.gif",
+    "sourceId": "0624"
+  },
+  {
+    "name": "Crunch",
+    "focusArea": "Core",
+    "type": "reps",
+    "steps": [
+      "Lie flat on your back with your knees bent and feet flat on the ground.",
+      "Place your hands behind your head with your elbows pointing outwards.",
+      "Engage your abs and lift your shoulders off the ground, curling forward towards your knees.",
+      "Pause for a moment at the top, then slowly lower your shoulders back down to the starting position.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0274.gif",
+    "sourceId": "0274"
+  },
+  {
+    "name": "Sit-up",
+    "focusArea": "Core",
+    "type": "reps",
+    "steps": [
+      "Lie flat on your back with your knees bent and feet flat on the ground.",
+      "Place your hands behind your head with your elbows pointing outwards.",
+      "Engaging your abs, slowly lift your upper body off the ground, curling forward until your torso is at a 45-degree angle.",
+      "Pause for a moment at the top, then slowly lower your upper body back down to the starting position.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0001.gif",
+    "sourceId": "0001"
+  },
+  {
+    "name": "Russian Twist",
+    "focusArea": "Core",
+    "type": "reps",
+    "steps": [
+      "Sit on the ground with your knees bent and feet flat on the floor.",
+      "Lean back slightly while keeping your back straight and your core engaged.",
+      "Hold your hands together in front of your chest or hold a weight if desired.",
+      "Lift your feet off the ground, balancing on your sit bones.",
+      "Twist your torso to the right, bringing your hands or weight towards the right side of your body.",
+      "Pause for a moment, then twist your torso to the left, bringing your hands or weight towards the left side of your body.",
+      "Continue alternating sides for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0687.gif",
+    "sourceId": "0687"
+  },
+  {
+    "name": "Bicycle Crunch",
+    "focusArea": "Core",
+    "type": "reps",
+    "steps": [
+      "Lie flat on your back with your hands placed behind your head.",
+      "Lift your legs off the ground and bend your knees at a 90-degree angle.",
+      "Bring your right elbow towards your left knee while simultaneously straightening your right leg.",
+      "Return to the starting position and repeat the movement on the opposite side, bringing your left elbow towards your right knee while straightening your left leg.",
+      "Continue alternating sides in a pedaling motion for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0003.gif",
+    "sourceId": "0003"
+  },
+  {
+    "name": "Flutter Kicks",
+    "focusArea": "Core",
+    "type": "timed",
+    "steps": [
+      "Lie flat on your back with your legs extended and your hands by your sides.",
+      "Engage your core and lift your legs off the ground about 6 inches.",
+      "Keeping your legs straight, alternate lifting one leg slightly higher than the other.",
+      "Continue this fluttering motion for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0459.gif",
+    "sourceId": "0459"
+  },
+  {
+    "name": "Side Plank",
+    "focusArea": "Core",
+    "type": "timed",
+    "steps": [
+      "Lie on your side with your legs extended and stacked on top of each other.",
+      "Place your forearm on the ground directly below your shoulder, with your elbow bent at a 90-degree angle.",
+      "Engage your core and lift your hips off the ground, creating a straight line from your head to your feet.",
+      "Hold this position for the desired amount of time.",
+      "Lower your hips back down to the starting position.",
+      "Repeat on the other side."
+    ],
+    "gif": "assets/gifs/0705.gif",
+    "sourceId": "0705"
+  },
+  {
+    "name": "Mountain Climber",
+    "focusArea": "Cardio",
+    "type": "timed",
+    "steps": [
+      "Start in a high plank position with your hands directly under your shoulders and your body in a straight line.",
+      "Engage your core and bring your right knee towards your chest, then quickly switch and bring your left knee towards your chest.",
+      "Continue alternating legs in a running motion, keeping your hips low and your core engaged.",
+      "Maintain a steady pace and breathe evenly throughout the exercise.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0630.gif",
+    "sourceId": "0630"
+  },
+  {
+    "name": "Jumping Jack",
+    "focusArea": "Cardio",
+    "type": "timed",
+    "steps": [
+      "Stand with your feet together and your arms by your sides.",
+      "Jump up, spreading your feet apart and raising your arms above your head.",
+      "As you land, quickly jump back to the starting position.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/3224.gif",
+    "sourceId": "3224"
+  },
+  {
+    "name": "High Knees",
+    "focusArea": "Cardio",
+    "type": "timed",
+    "steps": [
+      "Stand facing a wall with your feet hip-width apart.",
+      "Place your hands on the wall for support.",
+      "Engage your core and lift your right knee up towards your chest, while keeping your left foot on the ground.",
+      "Quickly switch legs, bringing your left knee up towards your chest and lowering your right foot back down.",
+      "Continue alternating legs in a running motion, bringing your knees up as high as possible.",
+      "Maintain a fast pace and keep your upper body stable throughout the exercise.",
+      "Repeat for the desired duration or number of repetitions."
+    ],
+    "gif": "assets/gifs/3636.gif",
+    "sourceId": "3636"
+  },
+  {
+    "name": "Skater Hops",
+    "focusArea": "Cardio",
+    "type": "timed",
+    "steps": [
+      "Stand with your feet shoulder-width apart.",
+      "Bend your knees slightly and jump to the right, landing on your right foot.",
+      "As you land, swing your left leg behind your right leg and tap the ground with your left toes.",
+      "Immediately jump to the left, landing on your left foot.",
+      "As you land, swing your right leg behind your left leg and tap the ground with your right toes.",
+      "Continue alternating sides, jumping and tapping the ground with each leg.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/3361.gif",
+    "sourceId": "3361"
+  },
+  {
+    "name": "Burpee",
+    "focusArea": "Full Body",
+    "type": "reps",
+    "steps": [
+      "Start in a standing position with your feet shoulder-width apart.",
+      "Lower your body into a squat position by bending your knees and placing your hands on the floor in front of you.",
+      "Kick your feet back into a push-up position.",
+      "Perform a push-up, keeping your body in a straight line.",
+      "Jump your feet back into the squat position.",
+      "Jump up explosively, reaching your arms overhead.",
+      "Land softly and immediately lower back into a squat position to begin the next repetition."
+    ],
+    "gif": "assets/gifs/1160.gif",
+    "sourceId": "1160"
+  },
+  {
+    "name": "Inchworm",
+    "focusArea": "Full Body",
+    "type": "reps",
+    "steps": [
+      "Start in a standing position with your feet hip-width apart.",
+      "Bend forward at the waist and place your hands on the ground in front of you.",
+      "Walk your hands forward until you are in a high plank position, with your body in a straight line from head to toe.",
+      "Pause for a moment, then walk your hands back towards your feet, keeping your legs as straight as possible.",
+      "Once your hands reach your feet, stand back up to the starting position.",
+      "Repeat for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/1471.gif",
+    "sourceId": "1471"
+  },
+  {
+    "name": "Bear Crawl",
+    "focusArea": "Full Body",
+    "type": "timed",
+    "steps": [
+      "Start on all fours with your hands directly under your shoulders and your knees directly under your hips.",
+      "Lift your knees slightly off the ground, keeping your back flat and your core engaged.",
+      "Move your right hand and left foot forward simultaneously, followed by your left hand and right foot.",
+      "Continue crawling forward, alternating your hand and foot movements.",
+      "Maintain a steady pace and keep your core tight throughout the exercise.",
+      "Continue for the desired distance or time."
+    ],
+    "gif": "assets/gifs/3360.gif",
+    "sourceId": "3360"
+  },
+  {
+    "name": "Superman Push-up",
+    "focusArea": "Full Body",
+    "type": "reps",
+    "steps": [
+      "Start in a high plank position with your hands slightly wider than shoulder-width apart and your feet together.",
+      "Engage your core and lower your body towards the ground, keeping your elbows close to your sides.",
+      "As you lower your body, simultaneously lift your right arm and left leg off the ground, extending them straight out.",
+      "Pause for a moment at the top, then lower your arm and leg back down while pushing yourself back up to the starting position.",
+      "Repeat the movement, this time lifting your left arm and right leg.",
+      "Continue alternating sides for the desired number of repetitions."
+    ],
+    "gif": "assets/gifs/0803.gif",
+    "sourceId": "0803"
+  }
+]
