@@ -10,9 +10,14 @@ Future<void> main() async {
   // Flutter must be ready before plugins such as sqflite can be used.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // This prints the table names in the Debug Console to prove they exist.
-  final tables = await DatabaseHelper.instance.tableNames();
-  debugPrint('Database tables: $tables');
+  // This temporary check prints the saved plans and is removed in Step 8.
+  final plans = await DatabaseHelper.instance.getAllPlans();
+  for (final plan in plans) {
+    debugPrint(
+      'Plan ${plan.id}: ${plan.title}, ${plan.exercises.length} exercises, '
+      '${plan.estMinutes} min',
+    );
+  }
 
   // The bundled exercise list is loaded once so every screen can use it.
   await ExerciseLibrary.load();

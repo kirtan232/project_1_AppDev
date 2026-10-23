@@ -1,6 +1,9 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/workout_plan.dart';
+import 'prebuilt_plans.dart';
+
 // This class opens the app's SQLite database and creates its tables.
 // Only one copy of this class exists, so the whole app shares one connection.
 class DatabaseHelper {
@@ -66,18 +69,21 @@ class DatabaseHelper {
           ON DELETE CASCADE
       )
     ''');
+
+    // The pre-built plans are added here because onCreate runs only once.
+    for (final plan in PrebuiltPlans.all()) {
+      await db.insert('workout_plans', plan.toMap());
+    }
   }
 
-  // This method returns the names of the app's tables so we can check they exist.
-  Future<List<String>> tableNames() async {
+  // This method reads every plan, with pre-built plans first and then by id.
+  Future<List<WorkoutPlan>> getAllPlans() async {
     final db = await database;
     final rows = await db.query(
-      'sqlite_master',
-      columns: ['name'],
-      where: 'type = ? AND name NOT LIKE ?',
-      whereArgs: ['table', 'sqlite_%'],
+      'workout_plans',
+      orderBy: 'is_prebuilt DESC, id ASC',
     );
-    return rows.map((row) => row['name'] as String).toList();
+    return rows.map((row) => WorkoutPlan.fromMap(row)).toList();
   }
 
   // This method closes the connection and clears it so it can be reopened later.
