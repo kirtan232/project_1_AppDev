@@ -29,6 +29,14 @@ class WorkoutPlan {
     required this.createdAt,
   });
 
+  // This getter returns the shared difficulty, or "Mixed" if the exercises differ.
+  String get difficultyLabel {
+    if (exercises.isEmpty) return 'Mixed';
+    final first = exercises.first.difficulty;
+    final allSame = exercises.every((e) => e.difficulty == first);
+    return allSame ? first : 'Mixed';
+  }
+
   // This method turns the plan into a map whose keys match the table columns.
   Map<String, dynamic> toMap() {
     return {
