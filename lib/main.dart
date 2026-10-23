@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
+import 'data/database_helper.dart';
 import 'screens/app_shell.dart';
 
-// The app starts here and shows the root widget.
-void main() {
+// The app opens the database first and then shows the root widget.
+Future<void> main() async {
+  // Flutter must be ready before plugins such as sqflite can be used.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // This prints the table names in the Debug Console to prove they exist.
+  final tables = await DatabaseHelper.instance.tableNames();
+  debugPrint('Database tables: $tables');
+
   runApp(const HomeFitApp());
 }
 
