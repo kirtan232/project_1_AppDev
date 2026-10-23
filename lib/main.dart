@@ -1,27 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
-import 'data/database_helper.dart';
 import 'data/exercise_library.dart';
 import 'screens/app_shell.dart';
 
-// The app opens the database first and then shows the root widget.
+// The app loads the exercise list first and then shows the root widget.
 Future<void> main() async {
   // Flutter must be ready before plugins such as sqflite can be used.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // This temporary check prints the saved plans and is removed in Step 8.
-  final plans = await DatabaseHelper.instance.getAllPlans();
-  for (final plan in plans) {
-    debugPrint(
-      'Plan ${plan.id}: ${plan.title}, ${plan.exercises.length} exercises, '
-      '${plan.estMinutes} min',
-    );
-  }
-
   // The bundled exercise list is loaded once so every screen can use it.
   await ExerciseLibrary.load();
-  debugPrint('Exercises loaded: ${ExerciseLibrary.all.length}');
 
   runApp(const HomeFitApp());
 }

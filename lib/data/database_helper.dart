@@ -86,6 +86,18 @@ class DatabaseHelper {
     return rows.map((row) => WorkoutPlan.fromMap(row)).toList();
   }
 
+  // This method reads only the pre-built plans shown on the Home screen.
+  Future<List<WorkoutPlan>> getPrebuiltPlans() async {
+    final db = await database;
+    final rows = await db.query(
+      'workout_plans',
+      where: 'is_prebuilt = ?',
+      whereArgs: [1],
+      orderBy: 'id ASC',
+    );
+    return rows.map((row) => WorkoutPlan.fromMap(row)).toList();
+  }
+
   // This method closes the connection and clears it so it can be reopened later.
   Future<void> close() async {
     final db = _database;
