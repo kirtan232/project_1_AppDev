@@ -60,6 +60,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # The exercise list and its GIFs are bundled so the app works offline.
+  assets:
+    - assets/data/exercises.json
+    - assets/gifs/
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
