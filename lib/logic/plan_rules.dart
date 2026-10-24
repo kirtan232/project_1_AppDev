@@ -2,6 +2,19 @@ import '../models/plan_exercise.dart';
 
 // These rules turn a difficulty into a target and estimate how long a plan takes.
 class PlanRules {
+  // These are the only focus areas a plan can have.
+  static const List<String> focusAreas = [
+    'Full Body',
+    'Upper',
+    'Lower',
+    'Core',
+    'Cardio',
+  ];
+
+  // These limits match the rules in the build plan.
+  static const int maxTitleLength = 40;
+  static const int maxDescriptionLength = 200;
+
   // This is the guess for how many seconds one rep takes.
   static const int secondsPerRep = 3;
 

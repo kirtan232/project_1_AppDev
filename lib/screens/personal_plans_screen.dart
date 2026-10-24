@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/database_helper.dart';
 import '../models/workout_plan.dart';
 import '../widgets/plan_card.dart';
+import 'plan_editor_screen.dart';
 
 // This screen lists the user's own plans and has a button to make a new one.
 class PersonalPlansScreen extends StatefulWidget {
@@ -49,6 +50,13 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
   // This method shows a short message at the bottom of the screen.
   void _showMessage(String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  // This method opens the New Plan form on top of this screen.
+  void _openNewPlan() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const PlanEditorScreen()),
+    );
   }
 
   // This method builds the middle of the screen based on the current state.
@@ -107,7 +115,7 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
       children: [
         // This large button matches the "+ New Plan" box in the wireframe.
         FilledButton.icon(
-          onPressed: () => _showMessage('The New Plan form comes next.'),
+          onPressed: _openNewPlan,
           icon: const Icon(Icons.add),
           label: const Text('New Plan'),
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
