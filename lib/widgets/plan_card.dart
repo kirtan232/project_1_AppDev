@@ -70,6 +70,16 @@ class PlanCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    // The description is shown on one line only when it is not empty.
+                    if (plan.description.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        plan.description,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall,
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       '${plan.estMinutes} min · '

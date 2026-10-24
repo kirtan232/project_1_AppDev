@@ -86,6 +86,18 @@ class DatabaseHelper {
     return rows.map((row) => WorkoutPlan.fromMap(row)).toList();
   }
 
+  // This method reads the user's own plans, with the newest first.
+  Future<List<WorkoutPlan>> getPersonalPlans() async {
+    final db = await database;
+    final rows = await db.query(
+      'workout_plans',
+      where: 'is_prebuilt = ?',
+      whereArgs: [0],
+      orderBy: 'id DESC',
+    );
+    return rows.map((row) => WorkoutPlan.fromMap(row)).toList();
+  }
+
   // This method reads only the pre-built plans shown on the Home screen.
   Future<List<WorkoutPlan>> getPrebuiltPlans() async {
     final db = await database;
