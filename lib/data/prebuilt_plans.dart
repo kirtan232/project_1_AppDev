@@ -4,9 +4,6 @@ import '../models/workout_plan.dart';
 
 // This file lists the three plans that come with the app.
 class PrebuiltPlans {
-  // The default rest time is used to estimate how long each plan takes.
-  static const int defaultRestSeconds = 20;
-
   // This method builds one exercise and sets its target from the difficulty.
   static PlanExercise _exercise(String name, String type, String difficulty) {
     return PlanExercise(
@@ -28,7 +25,10 @@ class PrebuiltPlans {
       description: description,
       focusArea: 'Full Body',
       exercises: exercises,
-      estMinutes: PlanRules.estimateMinutes(exercises, defaultRestSeconds),
+      estMinutes: PlanRules.estimateMinutes(
+        exercises,
+        PlanRules.defaultRestSeconds,
+      ),
       isPrebuilt: true,
       createdAt: DateTime.now(),
     );

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../data/database_helper.dart';
 import '../logic/plan_rules.dart';
 import '../models/exercise_info.dart';
 import '../models/plan_exercise.dart';
+import '../models/workout_plan.dart';
 import '../widgets/exercise_picker_sheet.dart';
 
 // This screen is the form for making a new workout plan.
@@ -25,6 +27,9 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
 
   // This becomes true when Done is pressed with no exercises added.
   bool _showExerciseError = false;
+
+  // This is true while the plan is being written to the database.
+  bool _saving = false;
 
   // Controllers hold memory, so they are cleaned up when the screen closes.
   @override
@@ -148,8 +153,49 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
     );
   }
 
+  // This getter is true when the user has typed or picked anything.
+  bool get _hasChanges {
+    return _titleController.text.trim().isNotEmpty ||
+        _descriptionController.text.trim().isNotEmpty ||
+        _focusArea != null ||
+        _exercises.isNotEmpty;
+  }
+
+  // This method runs for the Cancel button and the phone's back button.
+  Future<void> _onCancel() async {
+    // An empty form can close right away because nothing would be lost.
+    if (!_hasChanges) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final bool? discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard this plan?'),
+        content: const Text('Your changes will not be saved.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep editing'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    if (discard == true && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   // This method runs when Done is pressed.
-  void _onDone() {
+  Future<void> _onDone() async {
+    // A second tap is ignored while the first save is still running.
+    if (_saving) return;
+
     // The form shows red error text under any field that is not valid.
     final fieldsValid = _formKey.currentState!.validate();
     setState(() {
@@ -157,14 +203,55 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
     });
     if (!fieldsValid || _exercises.isEmpty) return;
 
-    // Saving to the database is added in a later step.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('The form is valid.')),
+    final plan = WorkoutPlan(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      focusArea: _focusArea!,
+      exercises: List.of(_exercises),
+      estMinutes: PlanRules.estimateMinutes(
+        _exercises,
+        PlanRules.defaultRestSeconds,
+      ),
+      isPrebuilt: false,
+      createdAt: DateTime.now(),
     );
+
+    setState(() {
+      _saving = true;
+    });
+    try {
+      await DatabaseHelper.instance.insertPlan(plan);
+      if (!mounted) return;
+      // Returning true tells the Personal Plans screen to reload its list.
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      // The form keeps everything the user typed so they can try again.
+      setState(() {
+        _saving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save the plan. Please try again.'),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // PopScope stops the back button from closing the form without asking.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _onCancel();
+      },
+      child: _buildScaffold(context),
+    );
+  }
+
+  // This method builds the form, the Types section, and the bottom buttons.
+  Widget _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('New Plan')),
       body: Form(
@@ -224,15 +311,22 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: _saving ? null : _onCancel,
                   child: const Text('Cancel'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
+                // The button is turned off and shows a spinner while saving.
                 child: FilledButton(
-                  onPressed: _onDone,
-                  child: const Text('Done'),
+                  onPressed: _saving ? null : _onDone,
+                  child: _saving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Done'),
                 ),
               ),
             ],

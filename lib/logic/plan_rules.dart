@@ -15,6 +15,9 @@ class PlanRules {
   static const int maxTitleLength = 40;
   static const int maxDescriptionLength = 200;
 
+  // This rest time is used to estimate how long a plan takes.
+  static const int defaultRestSeconds = 20;
+
   // This is the guess for how many seconds one rep takes.
   static const int secondsPerRep = 3;
 

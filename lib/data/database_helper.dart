@@ -76,6 +76,12 @@ class DatabaseHelper {
     }
   }
 
+  // This method saves a new plan and returns the id SQLite gave it.
+  Future<int> insertPlan(WorkoutPlan plan) async {
+    final db = await database;
+    return db.insert('workout_plans', plan.toMap());
+  }
+
   // This method reads every plan, with pre-built plans first and then by id.
   Future<List<WorkoutPlan>> getAllPlans() async {
     final db = await database;

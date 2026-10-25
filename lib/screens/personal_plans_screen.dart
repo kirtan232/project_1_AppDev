@@ -52,11 +52,15 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  // This method opens the New Plan form on top of this screen.
-  void _openNewPlan() {
-    Navigator.of(context).push(
+  // This method opens the New Plan form and reloads the list after a save.
+  Future<void> _openNewPlan() async {
+    final bool? saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (context) => const PlanEditorScreen()),
     );
+    if (saved == true && mounted) {
+      _showMessage('Plan saved.');
+      await _loadPlans();
+    }
   }
 
   // This method builds the middle of the screen based on the current state.
