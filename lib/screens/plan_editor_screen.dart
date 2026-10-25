@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../logic/plan_rules.dart';
+import '../models/exercise_info.dart';
+import '../models/plan_exercise.dart';
+import '../widgets/exercise_picker_sheet.dart';
 
 // This screen is the form for making a new workout plan.
 class PlanEditorScreen extends StatefulWidget {
@@ -16,6 +19,12 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   String? _focusArea;
+
+  // These are the exercises added to the plan, shown in the Types section.
+  final List<PlanExercise> _exercises = [];
+
+  // This becomes true when Done is pressed with no exercises added.
+  bool _showExerciseError = false;
 
   // Controllers hold memory, so they are cleaned up when the screen closes.
   @override
@@ -41,10 +50,112 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
     return null;
   }
 
+  // This method opens the exercise list, then asks for a difficulty.
+  Future<void> _addExercise() async {
+    final ExerciseInfo? picked = await showModalBottomSheet<ExerciseInfo>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const ExercisePickerSheet(),
+    );
+    // Nothing is added if the sheet was closed without a choice.
+    if (picked == null || !mounted) return;
+
+    final String? difficulty = await _askDifficulty(picked);
+    if (difficulty == null || !mounted) return;
+
+    setState(() {
+      _exercises.add(
+        PlanExercise(
+          name: picked.name,
+          difficulty: difficulty,
+          type: picked.type,
+          target: PlanRules.targetFor(difficulty, picked.type),
+        ),
+      );
+      _showExerciseError = false;
+    });
+  }
+
+  // This method shows the Easy, Medium, and Difficult choices with their targets.
+  Future<String?> _askDifficulty(ExerciseInfo exercise) {
+    final unit = exercise.type == 'timed' ? 'sec' : 'reps';
+    return showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(exercise.name),
+        children: [
+          for (final level in ['Easy', 'Medium', 'Difficult'])
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop(level),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              child: Text(
+                '$level · ${PlanRules.targetFor(level, exercise.type)} $unit',
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // This method removes one exercise from the Types list.
+  void _removeExercise(int index) {
+    setState(() {
+      _exercises.removeAt(index);
+    });
+  }
+
+  // This method builds the Types section with its rows and the add button.
+  Widget _buildTypesSection() {
+    final textTheme = Theme.of(context).textTheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Text('Types', style: textTheme.titleMedium),
+            ),
+            for (int i = 0; i < _exercises.length; i++)
+              ListTile(
+                title: Text(
+                  '${_exercises[i].name} (${_exercises[i].difficulty})',
+                ),
+                subtitle: Text(_exercises[i].targetLabel),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Remove ${_exercises[i].name}',
+                  onPressed: () => _removeExercise(i),
+                ),
+              ),
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: const Text('Add exercise'),
+              onTap: _addExercise,
+            ),
+            if (_showExerciseError)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Text(
+                  'Please add at least one exercise.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // This method runs when Done is pressed.
   void _onDone() {
     // The form shows red error text under any field that is not valid.
-    if (!_formKey.currentState!.validate()) return;
+    final fieldsValid = _formKey.currentState!.validate();
+    setState(() {
+      _showExerciseError = _exercises.isEmpty;
+    });
+    if (!fieldsValid || _exercises.isEmpty) return;
 
     // Saving to the database is added in a later step.
     ScaffoldMessenger.of(context).showSnackBar(
@@ -100,6 +211,8 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
               },
               validator: _validateFocus,
             ),
+            const SizedBox(height: 16),
+            _buildTypesSection(),
           ],
         ),
       ),
