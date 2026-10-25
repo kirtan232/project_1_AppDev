@@ -82,6 +82,42 @@ class DatabaseHelper {
     return db.insert('workout_plans', plan.toMap());
   }
 
+  // This method saves changes to an existing plan, found by its id.
+  Future<int> updatePlan(WorkoutPlan plan) async {
+    final db = await database;
+    return db.update(
+      'workout_plans',
+      plan.toMap(),
+      where: 'id = ?',
+      whereArgs: [plan.id],
+    );
+  }
+
+  // This method counts how many logged sets belong to a plan.
+  // The delete dialog uses it to warn the user what else will be removed.
+  Future<int> countLogsForPlan(int planId) async {
+    final db = await database;
+    final rows = await db.rawQuery(
+      'SELECT COUNT(*) AS total FROM training_logs WHERE workout_id = ?',
+      [planId],
+    );
+    return (rows.first['total'] as int?) ?? 0;
+  }
+
+  // This method deletes a plan and all of its logged sets together.
+  // The transaction means either both deletes happen or neither does.
+  Future<void> deletePlan(int planId) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(
+        'training_logs',
+        where: 'workout_id = ?',
+        whereArgs: [planId],
+      );
+      await txn.delete('workout_plans', where: 'id = ?', whereArgs: [planId]);
+    });
+  }
+
   // This method reads every plan, with pre-built plans first and then by id.
   Future<List<WorkoutPlan>> getAllPlans() async {
     final db = await database;

@@ -52,13 +52,18 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  // This method opens the New Plan form and reloads the list after a save.
-  Future<void> _openNewPlan() async {
-    final bool? saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (context) => const PlanEditorScreen()),
+  // This method opens the form for a new plan, or for editing when a plan is given.
+  // The list reloads after the form reports that it saved or deleted.
+  Future<void> _openEditor([WorkoutPlan? plan]) async {
+    final String? result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (context) => PlanEditorScreen(plan: plan)),
     );
-    if (saved == true && mounted) {
+    if (!mounted) return;
+    if (result == 'saved') {
       _showMessage('Plan saved.');
+      await _loadPlans();
+    } else if (result == 'deleted') {
+      _showMessage('Plan deleted.');
       await _loadPlans();
     }
   }
@@ -100,12 +105,12 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
         for (final plan in _plans)
           PlanCard(
             plan: plan,
-            // The workout player and the editor are connected in later steps.
+            // The workout player is connected in a later step.
             onTap: () => _showMessage('${plan.title} will open the player.'),
             trailing: IconButton(
               icon: const Icon(Icons.edit),
-              tooltip: 'Edit plan',
-              onPressed: () => _showMessage('Editing comes in a later step.'),
+              tooltip: 'Edit ${plan.title}',
+              onPressed: () => _openEditor(plan),
             ),
           ),
       ],
@@ -119,7 +124,7 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
       children: [
         // This large button matches the "+ New Plan" box in the wireframe.
         FilledButton.icon(
-          onPressed: _openNewPlan,
+          onPressed: () => _openEditor(),
           icon: const Icon(Icons.add),
           label: const Text('New Plan'),
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),

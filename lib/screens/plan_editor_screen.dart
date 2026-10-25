@@ -7,9 +7,13 @@ import '../models/plan_exercise.dart';
 import '../models/workout_plan.dart';
 import '../widgets/exercise_picker_sheet.dart';
 
-// This screen is the form for making a new workout plan.
+// This screen is the form for making a new plan or editing an existing one.
+// It closes with "saved" or "deleted" so the list knows what happened.
 class PlanEditorScreen extends StatefulWidget {
-  const PlanEditorScreen({super.key});
+  // The plan is null when making a new plan and filled in when editing.
+  final WorkoutPlan? plan;
+
+  const PlanEditorScreen({super.key, this.plan});
 
   @override
   State<PlanEditorScreen> createState() => _PlanEditorScreenState();
@@ -30,6 +34,22 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
 
   // This is true while the plan is being written to the database.
   bool _saving = false;
+
+  // This getter is true when the screen was opened to edit a plan.
+  bool get _isEditing => widget.plan != null;
+
+  // The form starts with the plan's values when editing.
+  @override
+  void initState() {
+    super.initState();
+    final plan = widget.plan;
+    if (plan != null) {
+      _titleController.text = plan.title;
+      _descriptionController.text = plan.description;
+      _focusArea = plan.focusArea;
+      _exercises.addAll(plan.exercises);
+    }
+  }
 
   // Controllers hold memory, so they are cleaned up when the screen closes.
   @override
@@ -155,10 +175,84 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
 
   // This getter is true when the user has typed or picked anything.
   bool get _hasChanges {
-    return _titleController.text.trim().isNotEmpty ||
-        _descriptionController.text.trim().isNotEmpty ||
-        _focusArea != null ||
-        _exercises.isNotEmpty;
+    final original = widget.plan;
+
+    // A new plan has changes as soon as anything is filled in.
+    if (original == null) {
+      return _titleController.text.trim().isNotEmpty ||
+          _descriptionController.text.trim().isNotEmpty ||
+          _focusArea != null ||
+          _exercises.isNotEmpty;
+    }
+
+    // An edited plan has changes when any value is different from the saved one.
+    return _titleController.text.trim() != original.title ||
+        _descriptionController.text.trim() != original.description ||
+        _focusArea != original.focusArea ||
+        _exerciseText(_exercises) != _exerciseText(original.exercises);
+  }
+
+  // This method turns an exercise list into text so two lists are easy to compare.
+  String _exerciseText(List<PlanExercise> list) {
+    return list.map((e) => '${e.name}|${e.difficulty}').join(',');
+  }
+
+  // This method asks before deleting and warns how many logged sets go too.
+  Future<void> _onDelete() async {
+    final plan = widget.plan!;
+    final int setCount;
+    try {
+      setCount = await DatabaseHelper.instance.countLogsForPlan(plan.id!);
+    } catch (e) {
+      if (!mounted) return;
+      _showError('Could not check this plan. Please try again.');
+      return;
+    }
+    if (!mounted) return;
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete "${plan.title}"?'),
+        content: Text(
+          setCount == 0
+              ? 'This plan has no logged sets.'
+              : 'This also deletes $setCount logged '
+                    '${setCount == 1 ? 'set' : 'sets'} from History.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _saving = true;
+    });
+    try {
+      await DatabaseHelper.instance.deletePlan(plan.id!);
+      if (!mounted) return;
+      Navigator.of(context).pop('deleted');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+      });
+      _showError('Could not delete the plan. Please try again.');
+    }
+  }
+
+  // This method shows an error message at the bottom of the screen.
+  void _showError(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   // This method runs for the Cancel button and the phone's back button.
@@ -203,7 +297,9 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
     });
     if (!fieldsValid || _exercises.isEmpty) return;
 
+    // An edited plan keeps its id and creation date so it updates the same row.
     final plan = WorkoutPlan(
+      id: widget.plan?.id,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       focusArea: _focusArea!,
@@ -213,28 +309,28 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
         PlanRules.defaultRestSeconds,
       ),
       isPrebuilt: false,
-      createdAt: DateTime.now(),
+      createdAt: widget.plan?.createdAt ?? DateTime.now(),
     );
 
     setState(() {
       _saving = true;
     });
     try {
-      await DatabaseHelper.instance.insertPlan(plan);
+      if (_isEditing) {
+        await DatabaseHelper.instance.updatePlan(plan);
+      } else {
+        await DatabaseHelper.instance.insertPlan(plan);
+      }
       if (!mounted) return;
-      // Returning true tells the Personal Plans screen to reload its list.
-      Navigator.of(context).pop(true);
+      // Returning "saved" tells the Personal Plans screen to reload its list.
+      Navigator.of(context).pop('saved');
     } catch (e) {
       if (!mounted) return;
       // The form keeps everything the user typed so they can try again.
       setState(() {
         _saving = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save the plan. Please try again.'),
-        ),
-      );
+      _showError('Could not save the plan. Please try again.');
     }
   }
 
@@ -253,7 +349,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
   // This method builds the form, the Types section, and the bottom buttons.
   Widget _buildScaffold(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New Plan')),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Plan' : 'New Plan')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -300,6 +396,18 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
             ),
             const SizedBox(height: 16),
             _buildTypesSection(),
+            // The Delete Plan button only appears when editing a saved plan.
+            if (_isEditing) ...[
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _onDelete,
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Delete Plan'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
           ],
         ),
       ),
