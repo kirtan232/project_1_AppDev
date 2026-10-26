@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 // These are the colors used across the whole app.
 class AppColors {
+  // Light blue is the main accent for buttons, sliders, and switches.
+  static const Color lightBlue = Color(0xFF5AB9EA);
+  // This darker blue is used for blue text on light backgrounds so it stays readable.
+  static const Color darkBlue = Color(0xFF1C6EA4);
   static const Color coral = Color(0xFFFF6B4A);
   static const Color mint = Color(0xFF2EC4A0);
   static const Color amber = Color(0xFFF5A524);
@@ -39,9 +43,11 @@ class AppTheme {
     required Color cardColor,
   }) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: AppColors.coral,
+      seedColor: AppColors.lightBlue,
       brightness: brightness,
-      primary: AppColors.coral,
+      primary: AppColors.lightBlue,
+      // Dark navy text is easier to read on light blue than white text.
+      onPrimary: AppColors.navy,
       surface: cardColor,
     );
 
@@ -71,13 +77,22 @@ class AppTheme {
       // Buttons are at least 48 pixels tall so they are easy to tap.
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.coral,
-          foregroundColor: AppColors.white,
+          backgroundColor: AppColors.lightBlue,
+          foregroundColor: AppColors.navy,
           minimumSize: const Size(48, 48),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
+        ),
+      ),
+      // Text buttons in dialogs use darker blue in light mode so they are easy to read.
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: brightness == Brightness.light
+              ? AppColors.darkBlue
+              : AppColors.lightBlue,
+          minimumSize: const Size(48, 48),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
