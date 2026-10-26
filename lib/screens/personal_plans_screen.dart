@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/database_helper.dart';
+import '../logic/plan_rules.dart';
 import '../models/workout_plan.dart';
 import '../widgets/plan_card.dart';
 import 'plan_editor_screen.dart';
@@ -17,6 +18,41 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
   List<WorkoutPlan> _plans = [];
   bool _loading = true;
   String? _error;
+
+  // This is the focus chip that is selected, starting with All.
+  String _selectedFocus = 'All';
+
+  // This getter returns only the plans that match the selected chip.
+  List<WorkoutPlan> get _visiblePlans {
+    if (_selectedFocus == 'All') return _plans;
+    return _plans.where((plan) => plan.focusArea == _selectedFocus).toList();
+  }
+
+  // This method builds the row of focus chips above the list.
+  Widget _buildFilterChips() {
+    final options = ['All', ...PlanRules.focusAreas];
+    return SingleChildScrollView(
+      // The chips scroll sideways if they do not fit on a small screen.
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final option in options)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(option),
+                selected: _selectedFocus == option,
+                onSelected: (_) {
+                  setState(() {
+                    _selectedFocus = option;
+                  });
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -100,9 +136,20 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
       );
     }
 
+    final visible = _visiblePlans;
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final plan in _plans)
+        _buildFilterChips(),
+        const SizedBox(height: 16),
+        // This message shows when plans exist but none match the chip.
+        if (visible.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: Center(child: Text('No $_selectedFocus plans yet.')),
+          ),
+        for (final plan in visible)
           PlanCard(
             plan: plan,
             // The workout player is connected in a later step.
