@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../data/exercise_library.dart';
+import '../models/plan_exercise.dart';
 import '../models/workout_plan.dart';
+import '../widgets/countdown_ring.dart';
 import '../widgets/exercise_card.dart';
+import '../widgets/rep_stepper.dart';
 
 // This screen plays a plan as flashcards, with one card per exercise.
 // The user can swipe between cards or use the Next and Skip buttons.
@@ -25,14 +30,71 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   // This is true when the current card is showing its instructions.
   bool _showSteps = false;
 
+  // This is how many reps the user says they did on the current card.
+  int _repsDone = 0;
+
+  // These track the countdown for a timed card.
+  Timer? _timer;
+  int _secondsLeft = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _resetForCard(0);
+  }
+
+  // The timer is stopped here so it never keeps running after the screen closes.
   @override
   void dispose() {
+    _timer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
 
+  // This getter returns the exercise on the card that is showing.
+  PlanExercise get _current => widget.plan.exercises[_index];
+
   // This getter is true when the last card is on screen.
   bool get _isLastCard => _index == widget.plan.exercises.length - 1;
+
+  // This getter is true while the countdown is running.
+  bool get _timerRunning => _timer?.isActive ?? false;
+
+  // This method stops any timer and sets the values for a new card.
+  // It does not call setState, so callers wrap it when the screen must redraw.
+  void _resetForCard(int index) {
+    _timer?.cancel();
+    _timer = null;
+    final exercise = widget.plan.exercises[index];
+    _repsDone = exercise.target;
+    _secondsLeft = exercise.target;
+  }
+
+  // This method starts the countdown, or pauses it if it is already running.
+  void _toggleTimer() {
+    if (_timerRunning) {
+      setState(() {
+        _timer?.cancel();
+      });
+      return;
+    }
+    // A finished timer starts again from the full time.
+    if (_secondsLeft == 0) _secondsLeft = _current.target;
+
+    setState(() {
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        // The check stops a late tick from updating a closed screen.
+        if (!mounted) return;
+        setState(() {
+          _secondsLeft--;
+          if (_secondsLeft <= 0) {
+            _secondsLeft = 0;
+            timer.cancel();
+          }
+        });
+      });
+    });
+  }
 
   // This method moves to the next card, or closes the player after the last one.
   void _goToNext() {
@@ -44,6 +106,40 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
     _pageController.nextPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
+    );
+  }
+
+  // This method picks the timer button text for each state of the countdown.
+  String _timerButtonLabel() {
+    if (_timerRunning) return 'Pause';
+    if (_secondsLeft == _current.target) return 'Start';
+    if (_secondsLeft == 0) return 'Restart';
+    return 'Resume';
+  }
+
+  // This method builds the stepper for rep cards or the ring for timed cards.
+  Widget _buildControl() {
+    if (_current.type != 'timed') {
+      return RepStepper(
+        value: _repsDone,
+        onChanged: (value) {
+          setState(() {
+            _repsDone = value;
+          });
+        },
+      );
+    }
+
+    return Column(
+      children: [
+        CountdownRing(secondsLeft: _secondsLeft, totalSeconds: _current.target),
+        const SizedBox(height: 12),
+        FilledButton.tonalIcon(
+          onPressed: _toggleTimer,
+          icon: Icon(_timerRunning ? Icons.pause : Icons.play_arrow),
+          label: Text(_timerButtonLabel()),
+        ),
+      ],
     );
   }
 
@@ -78,11 +174,12 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: total,
-                // Swiping to a new card updates the counter and hides the steps.
+                // A new card stops the old timer and starts from its own target.
                 onPageChanged: (page) {
                   setState(() {
                     _index = page;
                     _showSteps = false;
+                    _resetForCard(page);
                   });
                 },
                 itemBuilder: (context, i) {
@@ -97,6 +194,8 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                           _showSteps = !_showSteps;
                         });
                       },
+                      // Only the card on screen gets the working controls.
+                      control: i == _index ? _buildControl() : null,
                     ),
                   );
                 },

@@ -16,12 +16,16 @@ class ExerciseCard extends StatelessWidget {
   final bool showSteps;
   final VoidCallback onToggleSteps;
 
+  // This is the reps stepper or the countdown timer for the card on screen.
+  final Widget? control;
+
   const ExerciseCard({
     super.key,
     required this.exercise,
     required this.info,
     required this.showSteps,
     required this.onToggleSteps,
+    this.control,
   });
 
   // This tile is shown when an exercise has no GIF or the GIF cannot load.
@@ -112,14 +116,19 @@ class ExerciseCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(exercise.difficulty, style: textTheme.bodyMedium),
-                const SizedBox(height: 12),
                 Text(
-                  exercise.targetLabel,
-                  style: textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  '${exercise.difficulty} · target ${exercise.targetLabel}',
+                  style: textTheme.bodyMedium,
                 ),
+                const SizedBox(height: 12),
+                // The current card shows its stepper or timer, and other cards show the target.
+                control ??
+                    Text(
+                      exercise.targetLabel,
+                      style: textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
               ],
               const SizedBox(height: 12),
               TextButton.icon(
