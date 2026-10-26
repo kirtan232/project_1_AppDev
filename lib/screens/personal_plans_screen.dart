@@ -5,6 +5,7 @@ import '../logic/plan_rules.dart';
 import '../models/workout_plan.dart';
 import '../widgets/plan_card.dart';
 import 'plan_editor_screen.dart';
+import 'workout_player_screen.dart';
 
 // This screen lists the user's own plans and has a button to make a new one.
 class PersonalPlansScreen extends StatefulWidget {
@@ -104,6 +105,13 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
     }
   }
 
+  // This method opens the workout player for the tapped plan.
+  void _openPlayer(WorkoutPlan plan) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => WorkoutPlayerScreen(plan: plan)),
+    );
+  }
+
   // This method builds the middle of the screen based on the current state.
   Widget _buildList() {
     if (_loading) {
@@ -152,8 +160,7 @@ class _PersonalPlansScreenState extends State<PersonalPlansScreen> {
         for (final plan in visible)
           PlanCard(
             plan: plan,
-            // The workout player is connected in a later step.
-            onTap: () => _showMessage('${plan.title} will open the player.'),
+            onTap: () => _openPlayer(plan),
             trailing: IconButton(
               icon: const Icon(Icons.edit),
               tooltip: 'Edit ${plan.title}',
