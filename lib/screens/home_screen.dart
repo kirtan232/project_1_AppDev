@@ -47,6 +47,33 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // This method saves an editable copy of a pre-built plan to Personal Plans.
+  // The pre-built plan itself can never be edited or deleted.
+  Future<void> _copyToMyPlans(WorkoutPlan plan) async {
+    final copy = WorkoutPlan(
+      title: '${plan.title} (copy)',
+      description: plan.description,
+      focusArea: plan.focusArea,
+      exercises: List.of(plan.exercises),
+      estMinutes: plan.estMinutes,
+      isPrebuilt: false,
+      createdAt: DateTime.now(),
+    );
+    try {
+      await DatabaseHelper.instance.insertPlan(copy);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Copied to My Plans.')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not copy the plan. Please try again.'),
+        ),
+      );
+    }
+  }
+
   // This method runs when a plan card is tapped.
   void _openPlan(WorkoutPlan plan) {
     // The workout player is added in a later step, so a message is shown for now.
@@ -79,13 +106,18 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         // The real numbers are connected when History is built.
         const StatsStrip(sessionsThisWeek: 0, totalReps: 0),
-        Text(
-          'Pre-built plans',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Pre-built plans', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         for (final plan in _plans)
-          PlanCard(plan: plan, onTap: () => _openPlan(plan)),
+          PlanCard(
+            plan: plan,
+            onTap: () => _openPlan(plan),
+            trailing: IconButton(
+              icon: const Icon(Icons.copy),
+              tooltip: 'Copy ${plan.title} to My Plans',
+              onPressed: () => _copyToMyPlans(plan),
+            ),
+          ),
       ],
     );
   }
