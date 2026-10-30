@@ -15,6 +15,7 @@ class CountdownRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fraction = totalSeconds == 0 ? 0.0 : secondsLeft / totalSeconds;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       label: '$secondsLeft seconds left',
       child: SizedBox(
@@ -23,13 +24,22 @@ class CountdownRing extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
+            // The ring glides between seconds unless the phone asks for less motion.
             SizedBox.expand(
-              child: CircularProgressIndicator(
-                value: fraction,
-                strokeWidth: 10,
-                backgroundColor: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(end: fraction),
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(seconds: 1),
+                builder: (context, value, child) {
+                  return CircularProgressIndicator(
+                    value: value,
+                    strokeWidth: 10,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+                  );
+                },
               ),
             ),
             // ExcludeSemantics stops the number being read twice.

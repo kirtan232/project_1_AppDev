@@ -78,7 +78,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               SwitchListTile(
                 title: const Text('Vibration'),
-                subtitle: const Text('Vibrate when a set or timer ends.'),
+                subtitle: const Text('Vibrate when a timer ends.'),
                 value: settings.vibrationOn,
                 onChanged: (value) =>
                     _save(context, () => settings.setVibrationOn(value)),

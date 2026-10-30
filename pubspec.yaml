@@ -37,6 +37,7 @@ dependencies:
   sqflite: ^2.4.5
   path: ^1.9.1
   shared_preferences: ^2.5.6
+  audioplayers: ^6.8.1
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +65,7 @@ flutter:
   assets:
     - assets/data/exercises.json
     - assets/gifs/
+    - assets/sounds/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

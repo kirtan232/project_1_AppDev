@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme.dart';
@@ -94,8 +96,50 @@ class ExerciseCard extends StatelessWidget {
     );
   }
 
+  // This method turns a card side around the vertical line through its middle.
+  // The interval makes the old side turn away before the new side turns in.
+  Widget _flipTransition(Widget child, Animation<double> animation) {
+    final turn = CurvedAnimation(
+      parent: animation,
+      curve: const Interval(0.5, 1.0),
+    );
+    return AnimatedBuilder(
+      animation: turn,
+      child: child,
+      builder: (context, child) {
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.rotationY((1 - turn.value) * pi / 2),
+          child: child,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    return AnimatedSwitcher(
+      // A zero duration swaps the sides at once when the phone asks for less motion.
+      duration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 400),
+      transitionBuilder: _flipTransition,
+      // Both sides fill the page while they turn.
+      layoutBuilder: (currentChild, previousChildren) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [...previousChildren, ?currentChild],
+        );
+      },
+      // The key tells the switcher that the front and back are different.
+      child: KeyedSubtree(key: ValueKey(showSteps), child: _buildSide(context)),
+    );
+  }
+
+  // This method builds the side of the card that is showing.
+  Widget _buildSide(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Card(
       child: Padding(
