@@ -27,6 +27,22 @@ class WorkoutCompleteScreen extends StatelessWidget {
     return parts.join(', ');
   }
 
+  // This method grows the check mark into place, or just shows it with less motion.
+  Widget _buildCheck(BuildContext context) {
+    const check = Icon(Icons.check_circle, size: 96, color: AppColors.mint);
+    if (MediaQuery.disableAnimationsOf(context)) return check;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.5, end: 1),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutBack,
+      child: check,
+      builder: (context, scale, child) {
+        return Transform.scale(scale: scale, child: child);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -38,7 +54,7 @@ class WorkoutCompleteScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.check_circle, size: 96, color: AppColors.mint),
+                _buildCheck(context),
                 const SizedBox(height: 16),
                 Text(
                   'Workout complete!',

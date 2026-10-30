@@ -6,11 +6,13 @@ import '../app_theme.dart';
 import '../data/database_helper.dart';
 import '../data/exercise_library.dart';
 import '../logic/app_settings.dart';
+import '../logic/workout_feedback.dart';
 import '../models/plan_exercise.dart';
 import '../models/training_log.dart';
 import '../models/workout_plan.dart';
 import '../widgets/countdown_ring.dart';
 import '../widgets/exercise_card.dart';
+import '../widgets/plan_icon.dart';
 import '../widgets/rep_stepper.dart';
 import '../widgets/rest_card.dart';
 import 'workout_complete_screen.dart';
@@ -119,6 +121,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
           if (_secondsLeft <= 0) {
             _secondsLeft = 0;
             timer.cancel();
+            WorkoutFeedback.play();
           }
         });
       });
@@ -202,6 +205,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
       // The check stops a late tick from updating a closed screen.
       if (!mounted) return;
       if (_restLeft <= 1) {
+        WorkoutFeedback.play();
         _endRest();
         return;
       }
@@ -332,6 +336,11 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
       _finishWorkout();
       return;
     }
+    // The card changes at once when the phone asks for less motion.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pageController.jumpToPage(_index + 1);
+      return;
+    }
     _pageController.nextPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
@@ -413,16 +422,25 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
             // The progress bar and the text both show how far the user is.
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Column(
+              child: Row(
                 children: [
-                  Text('Card ${_index + 1} of $total'),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: (_index + 1) / total,
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
-                    semanticsLabel: 'Workout progress',
-                    semanticsValue: 'Card ${_index + 1} of $total',
+                  // This is where the icon from the plan card lands.
+                  PlanIcon(plan: widget.plan, size: 44),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text('Card ${_index + 1} of $total'),
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: (_index + 1) / total,
+                          minHeight: 8,
+                          borderRadius: BorderRadius.circular(4),
+                          semanticsLabel: 'Workout progress',
+                          semanticsValue: 'Card ${_index + 1} of $total',
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_theme.dart';
 import '../models/workout_plan.dart';
+import 'plan_icon.dart';
 
 // This reusable card shows one workout plan and runs onTap when it is pressed.
 class PlanCard extends StatelessWidget {
@@ -47,18 +48,7 @@ class PlanCard extends StatelessWidget {
           child: Row(
             children: [
               // The round icon gives each card a clear starting point.
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.coral.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.fitness_center,
-                  color: AppColors.coral,
-                ),
-              ),
+              PlanIcon(plan: plan, size: 56),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
