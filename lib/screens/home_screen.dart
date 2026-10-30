@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../data/database_helper.dart';
+import '../logic/app_settings.dart';
+import '../logic/focus_match.dart';
 import '../models/workout_plan.dart';
 import '../models/workout_stats.dart';
 import '../widgets/plan_card.dart';
+import '../widgets/plan_preview_sheet.dart';
 import '../widgets/stats_strip.dart';
+import '../widgets/suggestion_card.dart';
 import 'workout_player_screen.dart';
 
 // This screen shows the stats strip and the pre-built plans.
@@ -18,6 +22,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<WorkoutPlan> _plans = [];
   WorkoutStats _stats = const WorkoutStats(sessionsThisWeek: 0, totalReps: 0);
+
+  // These are the inputs for Focus Match, which looks at every plan.
+  List<WorkoutPlan> _allPlans = [];
+  Map<int, DateTime> _lastFinished = {};
+
+  // This is static so Not Now lasts when the user switches tabs.
+  // It clears when the app closes, so the plan can be suggested again.
+  static int? _dismissedPlanId;
+
   bool _loading = true;
   String? _error;
 
@@ -36,11 +49,15 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final plans = await DatabaseHelper.instance.getPrebuiltPlans();
       final stats = await DatabaseHelper.instance.getStats();
+      final allPlans = await DatabaseHelper.instance.getAllPlans();
+      final lastFinished = await DatabaseHelper.instance.getLastFinishedTimes();
       // The screen may have closed while the database was busy.
       if (!mounted) return;
       setState(() {
         _plans = plans;
         _stats = stats;
+        _allPlans = allPlans;
+        _lastFinished = lastFinished;
         _loading = false;
       });
     } catch (e) {
@@ -69,6 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Copied to My Plans.')));
+      // The new plan can now be suggested, so the inputs are read again.
+      await _loadPlans();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,6 +104,47 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (context) => WorkoutPlayerScreen(plan: plan)),
     );
     if (mounted) await _loadPlans();
+  }
+
+  // This method shows the plan's exercises, and only Start Workout opens the player.
+  Future<void> _viewPlan(WorkoutPlan plan) async {
+    final bool? start = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => PlanPreviewSheet(plan: plan),
+    );
+    if (start == true && mounted) await _openPlan(plan);
+  }
+
+  // This method works out the suggestion and builds its card.
+  Widget _buildSuggestion() {
+    final settings = AppSettings.instance;
+    if (!settings.showSuggestions) return const SizedBox.shrink();
+
+    final result = FocusMatch.suggest(
+      plans: _allPlans,
+      lastFinished: _lastFinished,
+      preference: settings.preferredFocus,
+      now: DateTime.now(),
+    );
+
+    // A plan the user turned down stays hidden until the suggestion changes.
+    final plan = result.plan;
+    if (plan != null && plan.id == _dismissedPlanId) {
+      return const SizedBox.shrink();
+    }
+
+    return SuggestionCard(
+      result: result,
+      onViewPlan: () {
+        if (plan != null) _viewPlan(plan);
+      },
+      onNotNow: () {
+        setState(() {
+          _dismissedPlanId = plan?.id;
+        });
+      },
+    );
   }
 
   @override
@@ -109,6 +169,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // The card updates as soon as a setting changes.
+        ListenableBuilder(
+          listenable: AppSettings.instance,
+          builder: (context, child) => _buildSuggestion(),
+        ),
         StatsStrip(
           sessionsThisWeek: _stats.sessionsThisWeek,
           totalReps: _stats.totalReps,
