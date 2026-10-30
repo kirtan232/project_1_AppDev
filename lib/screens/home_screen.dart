@@ -4,6 +4,7 @@ import '../data/database_helper.dart';
 import '../models/workout_plan.dart';
 import '../widgets/plan_card.dart';
 import '../widgets/stats_strip.dart';
+import 'workout_player_screen.dart';
 
 // This screen shows the stats strip and the pre-built plans.
 class HomeScreen extends StatefulWidget {
@@ -74,11 +75,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // This method runs when a plan card is tapped.
+  // This method opens the workout player for the tapped plan.
   void _openPlan(WorkoutPlan plan) {
-    // The workout player is added in a later step, so a message is shown for now.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${plan.title} will open the workout player.')),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => WorkoutPlayerScreen(plan: plan)),
     );
   }
 
