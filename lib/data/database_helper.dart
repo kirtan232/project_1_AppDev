@@ -3,6 +3,8 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/training_log.dart';
 import '../models/workout_plan.dart';
+import '../models/workout_session.dart';
+import '../models/workout_stats.dart';
 import 'prebuilt_plans.dart';
 
 // This class opens the app's SQLite database and creates its tables.
@@ -81,6 +83,70 @@ class DatabaseHelper {
   Future<int> insertLog(TrainingLog log) async {
     final db = await database;
     return db.insert('training_logs', log.toMap());
+  }
+
+  // This method reads every set with its plan title and groups them into sessions.
+  Future<List<WorkoutSession>> getSessions() async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT training_logs.*, workout_plans.title AS plan_title
+      FROM training_logs
+      JOIN workout_plans ON training_logs.workout_id = workout_plans.id
+      ORDER BY training_logs.logged_at ASC, training_logs.id ASC
+    ''');
+    return WorkoutSession.groupRows(rows);
+  }
+
+  // This method works out the stats again from the saved sets.
+  // COUNT(DISTINCT session_key) means three sets in one session count as one.
+  Future<WorkoutStats> getStats() async {
+    final db = await database;
+    final weekStart = WorkoutStats.startOfWeek(DateTime.now());
+
+    final sessionRows = await db.rawQuery(
+      'SELECT COUNT(DISTINCT session_key) AS total FROM training_logs '
+      'WHERE session_finished = ? AND logged_at >= ?',
+      [1, weekStart.toIso8601String()],
+    );
+    final repRows = await db.rawQuery(
+      'SELECT SUM(amount) AS total FROM training_logs WHERE unit = ?',
+      ['reps'],
+    );
+
+    return WorkoutStats(
+      sessionsThisWeek: (sessionRows.first['total'] as int?) ?? 0,
+      // SUM returns null when there are no rows, so zero is used instead.
+      totalReps: (repRows.first['total'] as int?) ?? 0,
+    );
+  }
+
+  // This method reads the sets in one session, oldest first.
+  Future<List<TrainingLog>> getLogsForSession(String sessionKey) async {
+    final db = await database;
+    final rows = await db.query(
+      'training_logs',
+      where: 'session_key = ?',
+      whereArgs: [sessionKey],
+      orderBy: 'logged_at ASC, id ASC',
+    );
+    return rows.map((row) => TrainingLog.fromMap(row)).toList();
+  }
+
+  // This method corrects the amount on one saved set.
+  Future<int> updateLogAmount(int logId, int amount) async {
+    final db = await database;
+    return db.update(
+      'training_logs',
+      {'amount': amount},
+      where: 'id = ?',
+      whereArgs: [logId],
+    );
+  }
+
+  // This method deletes one saved set.
+  Future<int> deleteLog(int logId) async {
+    final db = await database;
+    return db.delete('training_logs', where: 'id = ?', whereArgs: [logId]);
   }
 
   // This method marks every set in a session as finished.

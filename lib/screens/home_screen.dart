@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/database_helper.dart';
 import '../models/workout_plan.dart';
+import '../models/workout_stats.dart';
 import '../widgets/plan_card.dart';
 import '../widgets/stats_strip.dart';
 import 'workout_player_screen.dart';
@@ -16,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<WorkoutPlan> _plans = [];
+  WorkoutStats _stats = const WorkoutStats(sessionsThisWeek: 0, totalReps: 0);
   bool _loading = true;
   String? _error;
 
@@ -25,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadPlans();
   }
 
-  // This method reads the pre-built plans from the database.
+  // This method reads the pre-built plans and the stats from the database.
   Future<void> _loadPlans() async {
     setState(() {
       _loading = true;
@@ -33,10 +35,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     try {
       final plans = await DatabaseHelper.instance.getPrebuiltPlans();
+      final stats = await DatabaseHelper.instance.getStats();
       // The screen may have closed while the database was busy.
       if (!mounted) return;
       setState(() {
         _plans = plans;
+        _stats = stats;
         _loading = false;
       });
     } catch (e) {
@@ -75,11 +79,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // This method opens the workout player for the tapped plan.
-  void _openPlan(WorkoutPlan plan) {
-    Navigator.of(context).push(
+  // This method opens the workout player and refreshes the stats afterward.
+  Future<void> _openPlan(WorkoutPlan plan) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => WorkoutPlayerScreen(plan: plan)),
     );
+    if (mounted) await _loadPlans();
   }
 
   @override
@@ -104,8 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // The real numbers are connected when History is built.
-        const StatsStrip(sessionsThisWeek: 0, totalReps: 0),
+        StatsStrip(
+          sessionsThisWeek: _stats.sessionsThisWeek,
+          totalReps: _stats.totalReps,
+        ),
         Text('Pre-built plans', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         for (final plan in _plans)
