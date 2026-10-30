@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/training_log.dart';
 import '../models/workout_plan.dart';
+import '../models/workout_session.dart';
 import 'prebuilt_plans.dart';
 
 // This class opens the app's SQLite database and creates its tables.
@@ -81,6 +82,18 @@ class DatabaseHelper {
   Future<int> insertLog(TrainingLog log) async {
     final db = await database;
     return db.insert('training_logs', log.toMap());
+  }
+
+  // This method reads every set with its plan title and groups them into sessions.
+  Future<List<WorkoutSession>> getSessions() async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT training_logs.*, workout_plans.title AS plan_title
+      FROM training_logs
+      JOIN workout_plans ON training_logs.workout_id = workout_plans.id
+      ORDER BY training_logs.logged_at ASC, training_logs.id ASC
+    ''');
+    return WorkoutSession.groupRows(rows);
   }
 
   // This method marks every set in a session as finished.
