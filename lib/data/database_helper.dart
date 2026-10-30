@@ -120,6 +120,21 @@ class DatabaseHelper {
     );
   }
 
+  // This method finds when each plan was last finished, for Focus Match.
+  // A plan that was never finished is not in the result.
+  Future<Map<int, DateTime>> getLastFinishedTimes() async {
+    final db = await database;
+    final rows = await db.rawQuery(
+      'SELECT workout_id, MAX(logged_at) AS last_done FROM training_logs '
+      'WHERE session_finished = ? GROUP BY workout_id',
+      [1],
+    );
+    return {
+      for (final row in rows)
+        row['workout_id'] as int: DateTime.parse(row['last_done'] as String),
+    };
+  }
+
   // This method reads the sets in one session, oldest first.
   Future<List<TrainingLog>> getLogsForSession(String sessionKey) async {
     final db = await database;
