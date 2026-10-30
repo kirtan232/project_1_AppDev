@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/training_log.dart';
 import '../models/workout_plan.dart';
 import '../models/workout_session.dart';
+import '../models/workout_stats.dart';
 import 'prebuilt_plans.dart';
 
 // This class opens the app's SQLite database and creates its tables.
@@ -94,6 +95,29 @@ class DatabaseHelper {
       ORDER BY training_logs.logged_at ASC, training_logs.id ASC
     ''');
     return WorkoutSession.groupRows(rows);
+  }
+
+  // This method works out the stats again from the saved sets.
+  // COUNT(DISTINCT session_key) means three sets in one session count as one.
+  Future<WorkoutStats> getStats() async {
+    final db = await database;
+    final weekStart = WorkoutStats.startOfWeek(DateTime.now());
+
+    final sessionRows = await db.rawQuery(
+      'SELECT COUNT(DISTINCT session_key) AS total FROM training_logs '
+      'WHERE session_finished = ? AND logged_at >= ?',
+      [1, weekStart.toIso8601String()],
+    );
+    final repRows = await db.rawQuery(
+      'SELECT SUM(amount) AS total FROM training_logs WHERE unit = ?',
+      ['reps'],
+    );
+
+    return WorkoutStats(
+      sessionsThisWeek: (sessionRows.first['total'] as int?) ?? 0,
+      // SUM returns null when there are no rows, so zero is used instead.
+      totalReps: (repRows.first['total'] as int?) ?? 0,
+    );
   }
 
   // This method reads the sets in one session, oldest first.

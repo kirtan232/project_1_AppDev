@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../data/database_helper.dart';
 import '../models/workout_session.dart';
+import '../models/workout_stats.dart';
 import '../widgets/session_card.dart';
 import '../widgets/session_edit_sheet.dart';
+import '../widgets/stats_strip.dart';
 
 // This screen lists past workouts, with the newest first.
 class HistoryScreen extends StatefulWidget {
@@ -15,6 +17,7 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   List<WorkoutSession> _sessions = [];
+  WorkoutStats _stats = const WorkoutStats(sessionsThisWeek: 0, totalReps: 0);
   bool _loading = true;
   String? _error;
 
@@ -32,10 +35,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
     try {
       final sessions = await DatabaseHelper.instance.getSessions();
+      final stats = await DatabaseHelper.instance.getStats();
       // The screen may have closed while the database was busy.
       if (!mounted) return;
       setState(() {
         _sessions = sessions;
+        _stats = stats;
         _loading = false;
       });
     } catch (e) {
@@ -91,9 +96,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
     // ListView.builder only builds the cards that are on screen.
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _sessions.length,
+      // The first item is the summary header, and the sessions come after it.
+      itemCount: _sessions.length + 1,
       itemBuilder: (context, index) {
-        final session = _sessions[index];
+        if (index == 0) {
+          return StatsStrip(
+            sessionsThisWeek: _stats.sessionsThisWeek,
+            totalReps: _stats.totalReps,
+          );
+        }
+        final session = _sessions[index - 1];
         return SessionCard(
           session: session,
           onEdit: () => _editSession(session),
