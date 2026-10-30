@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import '../app_theme.dart';
 import '../data/database_helper.dart';
 import '../data/exercise_library.dart';
+import '../logic/app_settings.dart';
 import '../models/plan_exercise.dart';
 import '../models/training_log.dart';
 import '../models/workout_plan.dart';
 import '../widgets/countdown_ring.dart';
 import '../widgets/exercise_card.dart';
 import '../widgets/rep_stepper.dart';
+import '../widgets/rest_card.dart';
 
 // This screen plays a plan as flashcards, with one card per exercise.
 // The user can swipe between cards or use the Next and Skip buttons.
@@ -49,6 +51,12 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   // This is true while a set is being written to the database.
   bool _saving = false;
 
+  // These track the rest countdown between exercises.
+  Timer? _restTimer;
+  bool _resting = false;
+  int _restLeft = 0;
+  int _restTotal = 0;
+
   @override
   void initState() {
     super.initState();
@@ -58,10 +66,11 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
     _resetForCard(0);
   }
 
-  // The timer is stopped here so it never keeps running after the screen closes.
+  // The timers are stopped here so they never keep running after the screen closes.
   @override
   void dispose() {
     _timer?.cancel();
+    _restTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -155,7 +164,12 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
         _loggedCards.add(cardIndex);
         _saving = false;
       });
-      _goToNext();
+      // A rest comes between exercises, but not after the last one.
+      if (_isLastCard) {
+        _goToNext();
+      } else {
+        _startRest();
+      }
     } catch (e) {
       if (!mounted) return;
       // The card stays on screen so the user can press Done again.
@@ -168,6 +182,35 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
         ),
       );
     }
+  }
+
+  // This method starts the rest countdown using the time from Settings.
+  void _startRest() {
+    setState(() {
+      _resting = true;
+      _restTotal = AppSettings.instance.restSeconds;
+      _restLeft = _restTotal;
+    });
+    _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      // The check stops a late tick from updating a closed screen.
+      if (!mounted) return;
+      if (_restLeft <= 1) {
+        _endRest();
+        return;
+      }
+      setState(() {
+        _restLeft--;
+      });
+    });
+  }
+
+  // This method ends the rest, either at zero or from the Skip Rest button.
+  void _endRest() {
+    _restTimer?.cancel();
+    setState(() {
+      _resting = false;
+    });
+    _goToNext();
   }
 
   // This method moves to the next card, or closes the player after the last one.
@@ -262,70 +305,112 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               ),
             ),
             Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: total,
-                // Swiping is turned off during a save so the card cannot change.
-                physics: _saving ? const NeverScrollableScrollPhysics() : null,
-                // A new card stops the old timer and starts from its own target.
-                onPageChanged: (page) {
-                  setState(() {
-                    _index = page;
-                    _showSteps = false;
-                    _resetForCard(page);
-                  });
-                },
-                itemBuilder: (context, i) {
-                  return Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ExerciseCard(
-                      exercise: exercises[i],
-                      info: ExerciseLibrary.findByName(exercises[i].name),
-                      showSteps: i == _index && _showSteps,
-                      onToggleSteps: () {
-                        setState(() {
-                          _showSteps = !_showSteps;
-                        });
-                      },
-                      // Only the card on screen gets the working controls.
-                      control: i == _index ? _buildControl() : null,
-                    ),
-                  );
-                },
-              ),
-            ),
-            // The buttons give the same moves as swiping, for anyone who cannot swipe.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Row(
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Expanded(
-                    // Skip moves on without saving a set.
-                    child: OutlinedButton(
-                      onPressed: _saving ? null : _goToNext,
-                      child: const Text('Skip'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    // The button is turned off and shows a spinner while saving.
-                    child: FilledButton(
-                      onPressed: _saving ? null : _onDone,
-                      child: _saving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(_doneButtonLabel()),
-                    ),
-                  ),
+                  // The cards stay underneath so their place is kept during a rest.
+                  ExcludeSemantics(excluding: _resting, child: _buildCards()),
+                  if (_resting) _buildRestOverlay(),
                 ],
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: _resting ? _buildSkipRestButton() : _buildCardButtons(),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // This method builds the swipeable cards, one for each exercise.
+  Widget _buildCards() {
+    final exercises = widget.plan.exercises;
+    return PageView.builder(
+      controller: _pageController,
+      itemCount: exercises.length,
+      // Swiping is turned off during a save so the card cannot change.
+      physics: _saving ? const NeverScrollableScrollPhysics() : null,
+      // A new card stops the old timer and starts from its own target.
+      onPageChanged: (page) {
+        setState(() {
+          _index = page;
+          _showSteps = false;
+          _resetForCard(page);
+        });
+      },
+      itemBuilder: (context, i) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: ExerciseCard(
+            exercise: exercises[i],
+            info: ExerciseLibrary.findByName(exercises[i].name),
+            showSteps: i == _index && _showSteps,
+            onToggleSteps: () {
+              setState(() {
+                _showSteps = !_showSteps;
+              });
+            },
+            // Only the card on screen gets the working controls.
+            control: i == _index ? _buildControl() : null,
+          ),
+        );
+      },
+    );
+  }
+
+  // This method covers the cards with the rest countdown.
+  Widget _buildRestOverlay() {
+    return Positioned.fill(
+      // AbsorbPointer stops touches from reaching the cards underneath.
+      child: AbsorbPointer(
+        child: ColoredBox(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: RestCard(
+            secondsLeft: _restLeft,
+            totalSeconds: _restTotal,
+            nextExerciseName: widget.plan.exercises[_index + 1].name,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // This method builds the one button shown during a rest.
+  Widget _buildSkipRestButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(onPressed: _endRest, child: const Text('Skip Rest')),
+    );
+  }
+
+  // These buttons give the same moves as swiping, for anyone who cannot swipe.
+  Widget _buildCardButtons() {
+    return Row(
+      children: [
+        Expanded(
+          // Skip moves on without saving a set.
+          child: OutlinedButton(
+            onPressed: _saving ? null : _goToNext,
+            child: const Text('Skip'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          // The button is turned off and shows a spinner while saving.
+          child: FilledButton(
+            onPressed: _saving ? null : _onDone,
+            child: _saving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(_doneButtonLabel()),
+          ),
+        ),
+      ],
     );
   }
 }
