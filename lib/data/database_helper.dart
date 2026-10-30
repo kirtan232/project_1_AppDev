@@ -96,6 +96,35 @@ class DatabaseHelper {
     return WorkoutSession.groupRows(rows);
   }
 
+  // This method reads the sets in one session, oldest first.
+  Future<List<TrainingLog>> getLogsForSession(String sessionKey) async {
+    final db = await database;
+    final rows = await db.query(
+      'training_logs',
+      where: 'session_key = ?',
+      whereArgs: [sessionKey],
+      orderBy: 'logged_at ASC, id ASC',
+    );
+    return rows.map((row) => TrainingLog.fromMap(row)).toList();
+  }
+
+  // This method corrects the amount on one saved set.
+  Future<int> updateLogAmount(int logId, int amount) async {
+    final db = await database;
+    return db.update(
+      'training_logs',
+      {'amount': amount},
+      where: 'id = ?',
+      whereArgs: [logId],
+    );
+  }
+
+  // This method deletes one saved set.
+  Future<int> deleteLog(int logId) async {
+    final db = await database;
+    return db.delete('training_logs', where: 'id = ?', whereArgs: [logId]);
+  }
+
   // This method marks every set in a session as finished.
   Future<int> finishSession(String sessionKey) async {
     final db = await database;

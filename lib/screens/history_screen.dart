@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/database_helper.dart';
 import '../models/workout_session.dart';
 import '../widgets/session_card.dart';
+import '../widgets/session_edit_sheet.dart';
 
 // This screen lists past workouts, with the newest first.
 class HistoryScreen extends StatefulWidget {
@@ -46,12 +47,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  // This method runs when the pen icon on a session is pressed.
-  void _editSession(WorkoutSession session) {
-    // The edit sheet is added in the next step, so a message is shown for now.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Editing comes in the next step.')),
+  // This method opens the edit sheet and reloads the list when it closes.
+  Future<void> _editSession(WorkoutSession session) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SessionEditSheet(session: session),
     );
+    if (mounted) await _loadSessions();
   }
 
   @override
