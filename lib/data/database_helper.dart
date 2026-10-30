@@ -1,6 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../models/training_log.dart';
 import '../models/workout_plan.dart';
 import 'prebuilt_plans.dart';
 
@@ -74,6 +75,12 @@ class DatabaseHelper {
     for (final plan in PrebuiltPlans.all()) {
       await db.insert('workout_plans', plan.toMap());
     }
+  }
+
+  // This method saves one logged set and returns the id SQLite gave it.
+  Future<int> insertLog(TrainingLog log) async {
+    final db = await database;
+    return db.insert('training_logs', log.toMap());
   }
 
   // This method saves a new plan and returns the id SQLite gave it.
