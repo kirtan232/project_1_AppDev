@@ -83,6 +83,27 @@ class DatabaseHelper {
     return db.insert('training_logs', log.toMap());
   }
 
+  // This method marks every set in a session as finished.
+  Future<int> finishSession(String sessionKey) async {
+    final db = await database;
+    return db.update(
+      'training_logs',
+      {'session_finished': 1},
+      where: 'session_key = ?',
+      whereArgs: [sessionKey],
+    );
+  }
+
+  // This method deletes every set in a session.
+  Future<int> deleteSession(String sessionKey) async {
+    final db = await database;
+    return db.delete(
+      'training_logs',
+      where: 'session_key = ?',
+      whereArgs: [sessionKey],
+    );
+  }
+
   // This method saves a new plan and returns the id SQLite gave it.
   Future<int> insertPlan(WorkoutPlan plan) async {
     final db = await database;

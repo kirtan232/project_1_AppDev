@@ -13,6 +13,7 @@ import '../widgets/countdown_ring.dart';
 import '../widgets/exercise_card.dart';
 import '../widgets/rep_stepper.dart';
 import '../widgets/rest_card.dart';
+import 'workout_complete_screen.dart';
 
 // This screen plays a plan as flashcards, with one card per exercise.
 // The user can swipe between cards or use the Next and Skip buttons.
@@ -51,6 +52,10 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   // This is true while a set is being written to the database.
   bool _saving = false;
 
+  // These are used for the totals on the completion screen.
+  late final DateTime _startTime;
+  int _totalReps = 0;
+
   // These track the rest countdown between exercises.
   Timer? _restTimer;
   bool _resting = false;
@@ -61,8 +66,8 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   void initState() {
     super.initState();
     // The plan id and the start time together make the key unique.
-    final startTime = DateTime.now().millisecondsSinceEpoch;
-    _sessionKey = '${widget.plan.id}-$startTime';
+    _startTime = DateTime.now();
+    _sessionKey = '${widget.plan.id}-${_startTime.millisecondsSinceEpoch}';
     _resetForCard(0);
   }
 
@@ -162,6 +167,8 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
       if (!mounted) return;
       setState(() {
         _loggedCards.add(cardIndex);
+        // Timed sets are in seconds, so only rep sets add to the rep total.
+        if (log.unit == 'reps') _totalReps += log.amount;
         _saving = false;
       });
       // A rest comes between exercises, but not after the last one.
@@ -213,11 +220,116 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
     _goToNext();
   }
 
-  // This method moves to the next card, or closes the player after the last one.
+  // This method shows a short message at the bottom of the screen.
+  void _showMessage(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  // This method marks the session finished and opens the completion screen.
+  Future<void> _finishWorkout() async {
+    // A workout with no saved sets is not a session, so nothing is recorded.
+    if (_loggedCards.isEmpty) {
+      _showMessage('No sets were saved, so nothing was recorded.');
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+    });
+    try {
+      await DatabaseHelper.instance.finishSession(_sessionKey);
+      if (!mounted) return;
+
+      final minutes = DateTime.now().difference(_startTime).inMinutes;
+      // The completion screen replaces the player, so back does not reopen it.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => WorkoutCompleteScreen(
+            exerciseCount: _loggedCards.length,
+            totalReps: _totalReps,
+            // A very short workout still shows as one minute.
+            minutes: minutes < 1 ? 1 : minutes,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+      });
+      _showMessage('Could not finish the workout. Please try again.');
+    }
+  }
+
+  // This method runs for the phone's back button and the top back arrow.
+  Future<void> _onQuit() async {
+    if (_saving) return;
+
+    // Nothing has been saved yet, so there is nothing to ask about.
+    if (_loggedCards.isEmpty) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final String? choice = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Quit this workout?'),
+        content: Text(
+          'You have saved ${_loggedCards.length} '
+          '${_loggedCards.length == 1 ? 'set' : 'sets'} so far.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop('keep'),
+            child: const Text('Keep Going'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop('discard'),
+            child: const Text('Discard'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop('save'),
+            child: const Text('Save as Not Finished'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+
+    if (choice == 'save') {
+      // The sets are already saved as not finished, so the player can just close.
+      _showMessage('Saved as Not Finished.');
+      Navigator.of(context).pop();
+    } else if (choice == 'discard') {
+      await _discardSession();
+    }
+  }
+
+  // This method deletes the sets saved in this workout and closes the player.
+  Future<void> _discardSession() async {
+    setState(() {
+      _saving = true;
+    });
+    try {
+      await DatabaseHelper.instance.deleteSession(_sessionKey);
+      if (!mounted) return;
+      _showMessage('Workout discarded.');
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+      });
+      _showMessage('Could not discard the workout. Please try again.');
+    }
+  }
+
+  // This method moves to the next card, or finishes after the last one.
   void _goToNext() {
     if (_isLastCard) {
-      // The completion screen is added in a later step.
-      Navigator.of(context).pop();
+      _finishWorkout();
       return;
     }
     _pageController.nextPage(
@@ -279,8 +391,19 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final exercises = widget.plan.exercises;
-    final total = exercises.length;
+    // PopScope stops the back button from leaving without asking.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _onQuit();
+      },
+      child: _buildScaffold(context),
+    );
+  }
+
+  // This method builds the progress bar, the cards, and the buttons.
+  Widget _buildScaffold(BuildContext context) {
+    final total = widget.plan.exercises.length;
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.plan.title)),
